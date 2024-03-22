@@ -10,29 +10,30 @@ RESOURCE_POSITION_START_X = 1058
 RESOURCE_POSITION_START_Y = 135
 
 class Resource:
-    def __init__(self):
-        self.texture_view = WindowView.WindowView("null.png", RESOURCE_POSITION_START_X,
+    def __init__(self,name,count, index,state = ""):
+        self.state = state
+        self.name = name
+        self.texture_view = WindowView.WindowView(f"game_resources/{name}{state}.png", RESOURCE_POSITION_START_X + 88*index,
                                                   RESOURCE_POSITION_START_Y)
-        self.count_view = WindowView.WindowView("null.png", RESOURCE_POSITION_START_X,
-                                                  RESOURCE_POSITION_START_Y)
-        self.count = None
-        self.isSelected = False
-
-    def new(self,name,count):
-        self.texture_view = WindowView.WindowView(f"game_resources/{name}.png", RESOURCE_POSITION_START_X,
-                                                  RESOURCE_POSITION_START_Y)
-        self.count_view = WindowView.WindowView("score.png", RESOURCE_POSITION_START_X + 30,
+        self.count_view = WindowView.WindowView("score.png", RESOURCE_POSITION_START_X + 30 + 88*index,
                                                 RESOURCE_POSITION_START_Y - 25)
         self.count = count
+        self.isSelected = False
+        self.index=index
+
+
 
 class PlayerCharacter(arcade.Sprite):
     def __init__(self):
         super().__init__()
 
-        self.inventory = [Resource(), Resource(), Resource()]
-        self.inventory[0].new("wheat/BackPack",5)
+        self.thoughtWindow = WindowView.WindowView("think_window.png", 10,10)
+        self.thoughtWindow.scale = 0.5
+        self.thought = "weather"
+        self.thought_timer = 0
+        self.inventory = [Resource("wheat",5,0,"/BackPack"), Resource("null",0,1), Resource("null",0,2)]
+        self.inventory_selected_index = 0
 
-        self.cur_texture_side = 0 #определяем сторону в которую смотрит игрок
         self.cur_texture_anima = 0 #определяем кадр анимации
         self.scale = CHARACTER_SCALING
 

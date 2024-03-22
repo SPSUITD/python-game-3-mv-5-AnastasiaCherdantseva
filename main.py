@@ -1,6 +1,8 @@
 import arcade
 import modules.myGame as myGame
 
+arcade.load_font("resources/fonts/pix.ttf")
+
 
 def main():
     window = myGame.MyGame()

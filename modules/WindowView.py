@@ -20,4 +20,16 @@ class WindowView(arcade.Sprite):
             self.position_Y,
             self.width,
             self.height,
-            self.texture)
+            self.texture
+        )
+    def draw_text(self,text,x,y, color = arcade.csscolor.BROWN):
+        arcade.draw_text(
+            text,
+            x,
+            y,
+            color,
+            15,
+            0,
+            "left",
+            ("Comic Sans MS pixel rus eng", 'pix'),
+        )
