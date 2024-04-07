@@ -17,16 +17,18 @@ class Resource:
                                                   RESOURCE_POSITION_START_Y)
         self.count_view = WindowView.WindowView("score.png", RESOURCE_POSITION_START_X + 30 + 88*index,
                                                 RESOURCE_POSITION_START_Y - 25)
+
         self.count = count
         self.isSelected = False
         self.index=index
 
 
 
+
 class PlayerCharacter(arcade.Sprite):
     def __init__(self):
         super().__init__()
-
+        self.money = 100
         self.thoughtWindow = WindowView.WindowView("think_window.png", 10,10)
         self.thoughtWindow.scale = 0.5
         self.thought = "weather"
@@ -49,7 +51,9 @@ class PlayerCharacter(arcade.Sprite):
                 texture.append(arcade.load_texture(f"{main_path}{i}/{j}.png"))
             self.walk_textures.append(texture)
 
+        self.order = [
 
+        ]
         self.texture = self.idle_texture_pair #задаем стартовую текстуру
 
         self.hit_box = self.texture.hit_box_points #задаем границы текстурам

@@ -13,6 +13,7 @@ class WindowView(arcade.Sprite):
         self.position_Y = y
         self.width =self.idle_texture_pair.width
         self.height =self.idle_texture_pair.height
+        self.opacity = 255
 
     def draw(self):
         arcade.draw_texture_rectangle(
@@ -20,16 +21,24 @@ class WindowView(arcade.Sprite):
             self.position_Y,
             self.width,
             self.height,
-            self.texture
+            self.texture,
+            0,
+            self.opacity
         )
-    def draw_text(self,text,x,y, color = arcade.csscolor.BROWN):
-        arcade.draw_text(
-            text,
+    def draw_text(self,text,x,y, color = (182,137,98) , font = 15, width = 0,line=False,bold=False):
+        arcade.Text(
+            str(text),
             x,
             y,
             color,
-            15,
-            0,
+            font,
+            width,
             "left",
             ("Comic Sans MS pixel rus eng", 'pix'),
-        )
+            bold,
+            False,
+            'left',
+            'baseline',
+            line
+
+        ).draw()
