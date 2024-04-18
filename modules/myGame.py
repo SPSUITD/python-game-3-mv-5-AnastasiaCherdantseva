@@ -682,3 +682,4 @@ class MyGame(arcade.Window):  # класс окна
         for item in self.home_resources:
             if item.name == "null": return item.index
         return None
+#vgvhgv
