@@ -17,10 +17,11 @@ translater = {
     'radish': 'Редиска',
     'tomato': 'Помидоры',
     'wheat': 'Пшеница',
+    'money' : 'Монет'
 }
 
 SCREEN_WIDTH = 1400
-SCREEN_HEIGHT = 850
+SCREEN_HEIGHT = 750
 SCREEN_TITLE = "Игра"
 
 PLAYER_START_X = 1400
@@ -81,6 +82,36 @@ POINTS = [
     [Point(705, 630), Point(910, 560)]
 ]
 
+scriptText = {
+    1: {
+        "max": 3,
+        1: "Привет, новый друг! Меня зовут Лили и я работаю на своей маленькой ферме вместе со своими родителями. Недавно они отправились в путешествие и теперь я одна слежу  за фермой. Мне бы очень пригодилась твоя помощь!",
+        2: "Давай я расскажу тебе, что тут, да как. ",
+        3: "На севере острова находятся поля, на которые можно посадить, а позже и собрать разные культуры. Сейчас у меня с собой есть пшеница. Пойдем попробуем.",
+    },
+    2: {
+        "max": 2,
+        1: "Отлино! Ты посадил первую пшеницу. Давай посадим остальное и соберем. Также ты можешь собрать яблоки на яблонях ниже. Они уже поспели!",
+        2: "Потом пойдем в дом и оставим все там."
+    },
+    3: {
+        "max": 3,
+        1:"В доме я храню все,что не помещается у меня в инвентарь. Также по завершении дня я отправляю все заказы именно из дома, так что, если нужных товаров не окажется дома, заказ пропадет.",
+        2: "Ты можешь перемещать объекты из инвентаря в дом, кликнув по ним. Также ты можешь покупать нужные семена в магазине. Бюжет показан сверху от инвентаря. Ориентируйся на эту цифру.",
+        3: "Заказы приходят в почтовый ящик возле выхода в единый океан. Давай положим весь урожай в дом и посмотрим, какие заказы нам пришли."
+    },
+    4: {
+        "max": 2,
+        1: "В ящике каждое утро появляются заказы. Проверяй ящик в начале каждого дня на наличие заказов. Чтобы принять заказ, нажми 'пробел'.",
+        2: "Все принятые заказы я записываю в лист заказов. Его можно открыть, нажав на кнопку 'tab'. Так ты сможешь лучше ориентироваться в том, что тебе нужно подготовить к концу дня на отправку."
+    },
+    5: {
+        "max": 2,
+        1: "О нет! Мои родители был похищены!",
+        2: "Нужно как можно скорее собрать деньги на выкуп. У нас всего три дня!",
+    }
+}
+
 
 def interaction_button_draw(x, y):
     arcade.draw_circle_filled(
@@ -133,7 +164,6 @@ class MyGame(arcade.Window):  # класс окна
 
     #  конструктор
     def __init__(self):
-        # обращаемся к конструктору главного класса и создаем окно с заданными параметрами
         super().__init__(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE)
         self.set_mouse_visible(False)
         self.left_pressed = False
@@ -141,7 +171,6 @@ class MyGame(arcade.Window):  # класс окна
         self.up_pressed = False
         self.down_pressed = False
 
-        # объект сцены. Сцена - инструмент для управления несколькими различными списками спрайтов путем присвоения каждому имени и поддержания порядка рисования.
         self.scene = None
         self.curs = None
         self.money_sprite = None
@@ -175,9 +204,15 @@ class MyGame(arcade.Window):  # класс окна
         self.gui_camera = None
         #  задний фон
 
-        self.day = 1
+        self.day = 3
         self.next_day = False
 
+        self.isWin = 0
+        self.isEnd = 0
+
+        self.scriptActive = True
+        self.numberScript = 1
+        self.partScript = 1
     # arcade.set_background_color(arcade.csscolor.CORNFLOWER_BLUE)
 
     #  запуск игры
@@ -186,6 +221,9 @@ class MyGame(arcade.Window):  # класс окна
         self.camera = arcade.Camera(self.width, self.height)  # камера
 
         self.curs = WindowView.WindowView("curs.png", 100, 50)
+
+        self.winIMG = WindowView.WindowView("win.png", SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        self.loseIMG = WindowView.WindowView("lose.png", SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
 
         self.gui_camera = arcade.Camera(self.width, self.height)
 
@@ -224,7 +262,6 @@ class MyGame(arcade.Window):  # класс окна
                 "use_spatial_hash": False,
                 "hit_box_algorithm": "Detailed"
             }
-
         }
 
         # загружаем карту
@@ -251,7 +288,8 @@ class MyGame(arcade.Window):  # класс окна
                                                                INVENTORY_SELECTED_Y)
 
         self.home_inventory_sprite = WindowView.WindowView("home_inventory.png", HOME_INVENTORY_X, HOME_INVENTORY_Y)
-
+        self.playerPortet = WindowView.WindowView("plauerscript.png", 200, 400)
+        self.playerPortet.scale = 0.5
         self.orderList_sprite = WindowView.WindowView("paper.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.mailBox_sprite = WindowView.WindowView("paper.png", SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         self.mailBox_orders = ORDERS.DAYS[self.day]
@@ -311,7 +349,7 @@ class MyGame(arcade.Window):  # класс окна
                 if tree.resource.texture_index == 4: tree.resource.texture_index = 0
                 tree.texture = tree.resource.textures_list[tree.resource.texture_index]
 
-        if self.home_inventory_is_active or self.orderList_is_active or self.mailBox_sprite_is_active:
+        if self.home_inventory_is_active or self.orderList_is_active or self.mailBox_sprite_is_active or self.scriptActive:
             self.player_sprite.change_x = 0
             self.player_sprite.change_y = 0
 
@@ -372,6 +410,8 @@ class MyGame(arcade.Window):  # класс окна
         if key == arcade.key.E:
             for lunka in self.lunka_hit_list:
                 if not lunka.isUsed:
+                    if  self.numberScript == 2:
+                        self.scriptActive = True
                     if (self.player_sprite.inventory[self.player_sprite.inventory_selected_index].name is not None
                             and "BackPack" in self.player_sprite.inventory[
                                 self.player_sprite.inventory_selected_index].state
@@ -428,16 +468,20 @@ class MyGame(arcade.Window):  # класс окна
                 else:
                     self.player_sprite.thought = "Еще не выросло.."
             for door in self.home_hit_list:
+                if self.numberScript == 3:
+                    self.scriptActive = True
                 if self.home_inventory_is_active == True:
                     self.home_inventory_is_active = False
                 else:
                     self.home_inventory_is_active = True
                 break
             for box in self.box_hit_list:
+                if self.numberScript == 4 or self.numberScript == 5:
+                    self.scriptActive = True
                 if self.mailBox_sprite_is_active:
                     self.mailBox_sprite_is_active = False
                 else:
-                    if len(self.mailBox_orders) > 0:
+                    if len(self.mailBox_orders) > 0 and self.numberScript > 3:
                         self.mailBox_sprite_is_active = True
                     else:
                         self.player_sprite.thought = "Ничего нет"
@@ -452,9 +496,17 @@ class MyGame(arcade.Window):  # класс окна
                         'orderList': self.mailBox_orders[0]['orderList']
                     }
                 )
-                print(self.player_sprite.order[0])
+                print(self.player_sprite.order)
                 self.mailBox_orders.pop(0)
 
+        if key == arcade.key.ENTER:
+            if self.scriptActive:
+                if scriptText[self.numberScript]["max"] > self.partScript:
+                    self.partScript += 1
+                else:
+                    self.numberScript+=1
+                    self.partScript = 1
+                    self.scriptActive = False
         self.process_keychange()
 
     # остановка игрока при ОТПУСКАНИИ кнопки
@@ -563,15 +615,15 @@ class MyGame(arcade.Window):  # класс окна
             self.curs.draw()
 
         if self.mailBox_sprite_is_active:
-            if len(self.mailBox_orders) > 0:
+            if len(self.mailBox_orders) > 0 :
                 self.mailBox_sprite.draw()
                 line = 0
                 for text in self.mailBox_orders[0]['massage']:
                     self.mailBox_sprite.draw_text(text, SCREEN_WIDTH / 2 - 250, SCREEN_HEIGHT / 2 + 100 - line,
                                                   (182, 137, 98), 15, 550, True)
                     line += 20
-                self.mailBox_sprite.draw_text("С уважением, " + self.mailBox_orders[0]['name'], SCREEN_WIDTH / 2 + 90,
-                                              SCREEN_HEIGHT / 2 - 150)
+                if self.mailBox_orders[0]['name'] != 'Похитители':
+                    self.mailBox_sprite.draw_text("С уважением, " + self.mailBox_orders[0]['name'], SCREEN_WIDTH / 2 + 90, SCREEN_HEIGHT / 2 - 150)
             else:
                 self.mailBox_sprite_is_active = False
 
@@ -587,14 +639,23 @@ class MyGame(arcade.Window):  # класс окна
                     line += 20
                 line += 20
 
-    # for i in POINTS:
-    # for j in i:
-    # arcade.draw_point(
-    #   j.x,
-    #  j.y,
-    #  (255,255,255),
-    #  3
-    # )
+        if self.scriptActive:
+            if self.numberScript != 5 or (self.numberScript == 5 and len(self.player_sprite.order)):
+                arcade.draw_rectangle_filled(SCREEN_WIDTH/2,SCREEN_HEIGHT/2,SCREEN_WIDTH,SCREEN_HEIGHT,(0,0,0,150))
+                arcade.draw_rectangle_filled(SCREEN_WIDTH/2,SCREEN_HEIGHT/9,SCREEN_WIDTH,SCREEN_HEIGHT/4,(10,30,30,255))
+                self.playerPortet.draw()
+                arcade.Text(scriptText[self.numberScript][self.partScript],100,100,(255,255,255),18,1300,"left",("Comic Sans MS pixel rus eng", 'pix'), False,
+                False,
+                'left',
+                'baseline',
+                True).draw()
+
+        if self.isEnd:
+            if self.isWin:
+                self.winIMG.draw()
+            else:
+                self.loseIMG.draw()
+
 
     def on_mouse_motion(self, x, y, dx, dy):
         self.curs.position_X = x
@@ -668,18 +729,22 @@ class MyGame(arcade.Window):  # класс окна
                                     self.player_sprite.inventory[i - 20] = characters.Resource("null", 0, i - 20)
                 if x > POINTS[23][0].x and x < POINTS[23][1].x and y > POINTS[23][1].y and y < POINTS[23][0].y:
                     for order in self.player_sprite.order:
-                        for orderList in order['orderList']:
-                            for res in self.home_resources:
-                                if res.name == orderList['name'] and int(res.count) >= int(orderList['amount']):
-                                    res.count = int(res.count) - int(orderList['amount'])
-                                    self.player_sprite.money += SALE[orderList['name']] * int(orderList['amount'])
-                    self.player_sprite.order = []
+                        if order['name'] != 'Похитители':
+                            for orderList in order['orderList']:
+                                for res in self.home_resources:
+                                    if res.name == orderList['name'] and int(res.count) >= int(orderList['amount']):
+                                        res.count = int(res.count) - int(orderList['amount'])
+                                        self.player_sprite.money += SALE[orderList['name']] * int(orderList['amount'])
+                    del self.player_sprite.order[1:len(self.player_sprite.order)]
                     if self.day < 3 :
                         self.day += 1
                         self.next_day = True
+                    else:
+                        self.isEnd = True
+                        if self.player_sprite.money >= 520:
+                            self.isWin=True
 
     def home_index(self):
         for item in self.home_resources:
             if item.name == "null": return item.index
         return None
-#vgvhgv
